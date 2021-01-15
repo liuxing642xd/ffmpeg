@@ -670,6 +670,8 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
                     ret = got_frame ? 0 : (pkt.data ? AVERROR(EAGAIN) : AVERROR_EOF);
                 }
             } else {
+                // av_log(d->avctx, AV_LOG_INFO, "decode pkt data:%p, pkt pts/dts: %5ld, %5ld\n",
+                //     pkt.data, pkt.pts, pkt.dts);
                 if (avcodec_send_packet(d->avctx, &pkt) == AVERROR(EAGAIN)) {
                     av_log(d->avctx, AV_LOG_ERROR, "Receive_frame and send_packet both returned EAGAIN, which is an API violation.\n");
                     d->packet_pending = 1;
@@ -3066,6 +3068,16 @@ static int read_thread(void *arg)
             packet_queue_put(&is->audioq, pkt);
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
+            if (!first_vpkt_received) {
+                first_vpkt_received =  true;
+                first_vpkt_ts = av_gettime_relative();
+                av_log(NULL, AV_LOG_INFO, "read first video pkt delay: %ld ms\n",
+                    (first_vpkt_ts - read_start_ts)/1000);
+            }
+
+            av_log(NULL, AV_LOG_INFO, "read video pkt pts/dts: %5ld, %5ld\n",
+                pkt->pts, pkt->dts);
+
             packet_queue_put(&is->videoq, pkt);
             if (!first_vpkt_received) {
                 first_vpkt_received =  true;
