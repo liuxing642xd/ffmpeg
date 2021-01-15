@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "libavutil/avstring.h"
 #include "libavutil/eval.h"
@@ -2767,6 +2768,11 @@ static int read_thread(void *arg)
     SDL_mutex *wait_mutex = SDL_CreateMutex();
     int scan_all_pmts_set = 0;
     int64_t pkt_ts;
+    int64_t read_start_ts;
+    int64_t first_apkt_ts;
+    int64_t first_vpkt_ts;
+    bool first_apkt_received = false;
+    bool first_vpkt_received = false;
 
     if (!wait_mutex) {
         av_log(NULL, AV_LOG_FATAL, "SDL_CreateMutex(): %s\n", SDL_GetError());
@@ -2928,6 +2934,7 @@ static int read_thread(void *arg)
     if (infinite_buffer < 0 && is->realtime)
         infinite_buffer = 1;
 
+    read_start_ts =  av_gettime_relative();
     for (;;) {
         if (is->abort_request)
             break;
@@ -3046,9 +3053,30 @@ static int read_thread(void *arg)
                 (double)(start_time != AV_NOPTS_VALUE ? start_time : 0) / 1000000
                 <= ((double)duration / 1000000);
         if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
+            if (!first_apkt_received) {
+                first_apkt_received =  true;
+                first_apkt_ts = av_gettime_relative();
+                av_log(NULL, AV_LOG_INFO, "read first audio pkt delay: %ld ms\n",
+                    (first_apkt_ts - read_start_ts)/1000);
+            }
+
+            av_log(NULL, AV_LOG_INFO, "read audio pkt pts/dts: %5ld, %5ld\n",
+                pkt->pts, pkt->dts);
+
             packet_queue_put(&is->audioq, pkt);
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
+            packet_queue_put(&is->videoq, pkt);
+            if (!first_vpkt_received) {
+                first_vpkt_received =  true;
+                first_vpkt_ts = av_gettime_relative();
+                av_log(NULL, AV_LOG_INFO, "read first video pkt delay: %ld ms\n",
+                    (first_vpkt_ts - read_start_ts)/1000);
+            }
+
+            av_log(NULL, AV_LOG_INFO, "read video pkt pts/dts: %5ld, %5ld\n",
+                pkt->pts, pkt->dts);
+
             packet_queue_put(&is->videoq, pkt);
         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
             packet_queue_put(&is->subtitleq, pkt);
