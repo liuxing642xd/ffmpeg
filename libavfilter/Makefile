@@ -435,6 +435,7 @@ OBJS-$(CONFIG_TRANSPOSE_VAAPI_FILTER)        += vf_transpose_vaapi.o vaapi_vpp.o
 OBJS-$(CONFIG_TRIM_FILTER)                   += trim.o
 OBJS-$(CONFIG_UNPREMULTIPLY_FILTER)          += vf_premultiply.o framesync.o
 OBJS-$(CONFIG_UNSHARP_FILTER)                += vf_unsharp.o
+OBJS-$(CONFIG_UNSHARP_NPP_FILTER)            += vf_unsharp_npp.o
 OBJS-$(CONFIG_UNSHARP_OPENCL_FILTER)         += vf_unsharp_opencl.o opencl.o \
                                                 opencl/unsharp.o
 OBJS-$(CONFIG_UNTILE_FILTER)                 += vf_untile.o
