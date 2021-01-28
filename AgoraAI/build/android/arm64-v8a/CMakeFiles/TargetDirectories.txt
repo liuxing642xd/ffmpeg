@@ -1,0 +1,11 @@
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/CMakeFiles/rebuild_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libAgoraAI/CMakeFiles/rebuild_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libAgoraAI/CMakeFiles/edit_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libAgoraAI/CMakeFiles/AgoraAI.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libJnd/CMakeFiles/rebuild_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libJnd/CMakeFiles/edit_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/libJnd/CMakeFiles/Jnd.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/test/CMakeFiles/rebuild_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/test/CMakeFiles/edit_cache.dir
+/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/android/arm64-v8a/test/CMakeFiles/testJnd.dir

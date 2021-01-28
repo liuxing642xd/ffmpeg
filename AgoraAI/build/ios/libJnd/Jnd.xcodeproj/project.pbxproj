@@ -1,0 +1,548 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		8BC3DBD770484D71AD6E29DF /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 09D5550402D647D2BD98DC97 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				468702F6132343CBA1981DA9 /* CMake Rules */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+		CBEE63402E314ABBAA89090F /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 34DF00E85BE84151A9A6B824 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				B5C5533331944FDAAFE051D9 /* CMake Rules */,
+			);
+			dependencies = (
+				A3126CB552134A3C8AFC9412 /* PBXTargetDependency */,
+				AE3D32D7F95248F09B371148 /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		05A0C108296345029353E92B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.h */ = {isa = PBXBuildFile; fileRef = CAA90CF0958C4E4CA491C215 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.h */; };
+		19C40C56B3184CBCA457538A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.mm */ = {isa = PBXBuildFile; fileRef = B135ED8F9F8D4F0FB2D0DEEE /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.mm */; };
+		1EFDC67177B144F5B6B18921 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.h */ = {isa = PBXBuildFile; fileRef = 7BD0555C36F249088E88ABCB /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.h */; };
+		29B51ED6C31243D4BA4B617A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.mm */ = {isa = PBXBuildFile; fileRef = 9C63A1B4247E43E89C3F9D22 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.mm */; };
+		64F99235C84E4BFFA975B444 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.h */ = {isa = PBXBuildFile; fileRef = E6D81BFF0934464284F8EBF6 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.h */; };
+		8E45234A6410444B8FA23313 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.h */ = {isa = PBXBuildFile; fileRef = D27E889297F04717B7A1700E /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.h */; };
+		9670185814A64D23B44A092F /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.mm */ = {isa = PBXBuildFile; fileRef = 4C1EAEE89E874ECB85F19D82 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.mm */; };
+		ABF8D576CDD14FF4924039E6 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.h */ = {isa = PBXBuildFile; fileRef = 7261C5A3446245A289B8C0AA /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.h */; };
+		DF7FFF1E863E4B138052CC86 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.mm */ = {isa = PBXBuildFile; fileRef = 447042698884416E88FC690D /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.mm */; };
+		F0CD313899AB48E38AFFEFF3 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_define.h */ = {isa = PBXBuildFile; fileRef = 9AD28A39E8EE4603A3C39DC7 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_define.h */; };
+		F90936A6EEC548F980AC2065 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 44D05218CBC54FF59966822A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */; };
+		FD6E438591E84C42B7D68B6B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.mm */ = {isa = PBXBuildFile; fileRef = 99674B1900504AB9B160AD7B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		5BD00630002846AE844D61D6 /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		F2D5041BB3544B2592D84749 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+		65FF3F5E750F44D7B246C4A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F69D722FE9A472FBE17C724 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8BC3DBD770484D71AD6E29DF;
+			remoteInfo = ZERO_CHECK;
+		};
+		6D12F60EA6F740608FCCCAA5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F69D722FE9A472FBE17C724 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 77D1AEB62896494788D8D8A5;
+			remoteInfo = Jnd;
+		};
+		89115EAE1D604F08B43EB654 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F69D722FE9A472FBE17C724 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8BC3DBD770484D71AD6E29DF;
+			remoteInfo = ZERO_CHECK;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		447042698884416E88FC690D /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = metal_kernel_cfg.mm; path = ../../src/libJnd/ios/metal_kernel_cfg.mm; sourceTree = SOURCE_ROOT; };
+		44D05218CBC54FF59966822A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		4C1EAEE89E874ECB85F19D82 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = half_float.mm; path = ../../src/libJnd/ios/half_float.mm; sourceTree = SOURCE_ROOT; };
+		6CF1568167A549B3A22DA257 /* Jnd */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libJnd.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7261C5A3446245A289B8C0AA /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = jnd_filter_metal.h; path = ../../src/libJnd/ios/jnd_filter_metal.h; sourceTree = SOURCE_ROOT; };
+		7BD0555C36F249088E88ABCB /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = metal_kernel_cfg.h; path = ../../src/libJnd/ios/metal_kernel_cfg.h; sourceTree = SOURCE_ROOT; };
+		8A64E53D71F94585BD1F83E1 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		99674B1900504AB9B160AD7B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = metal_engine.mm; path = ../../src/libJnd/ios/metal_engine.mm; sourceTree = SOURCE_ROOT; };
+		9AD28A39E8EE4603A3C39DC7 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_define.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = metal_define.h; path = ../../src/libJnd/ios/metal_define.h; sourceTree = SOURCE_ROOT; };
+		9C63A1B4247E43E89C3F9D22 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = jnd_filter_oc.mm; path = ../../src/libJnd/ios/jnd_filter_oc.mm; sourceTree = SOURCE_ROOT; };
+		B135ED8F9F8D4F0FB2D0DEEE /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = jnd_filter_metal.mm; path = ../../src/libJnd/ios/jnd_filter_metal.mm; sourceTree = SOURCE_ROOT; };
+		CAA90CF0958C4E4CA491C215 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = jnd_filter_oc.h; path = ../../src/libJnd/ios/jnd_filter_oc.h; sourceTree = SOURCE_ROOT; };
+		D27E889297F04717B7A1700E /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = metal_engine.h; path = ../../src/libJnd/ios/metal_engine.h; sourceTree = SOURCE_ROOT; };
+		E620BB02C2C446838F335941 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		E6D81BFF0934464284F8EBF6 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = half_float.h; path = ../../src/libJnd/ios/half_float.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		04B01CF9EE1A4899907F8524 /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				8B232AC5A50242498FEAF397 /* CMake Rules */,
+				8A64E53D71F94585BD1F83E1 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */,
+			);
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		1B2629310E0B480C91B0E56D /* ZERO_CHECK */ = {
+			isa = PBXGroup;
+			children = (
+				A2F1851294EE4CA9AB2FF276 /* CMake Rules */,
+				E620BB02C2C446838F335941 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */,
+			);
+			name = ZERO_CHECK;
+			sourceTree = "<group>";
+		};
+		821DC297754E4878A8A5C555 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6CF1568167A549B3A22DA257 /* Jnd */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		83FB57E0F69C47079561DC8F /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				4C1EAEE89E874ECB85F19D82 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.mm */,
+				B135ED8F9F8D4F0FB2D0DEEE /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.mm */,
+				9C63A1B4247E43E89C3F9D22 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.mm */,
+				99674B1900504AB9B160AD7B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.mm */,
+				447042698884416E88FC690D /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.mm */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		887A377060E54992BD2DAE89 /* Jnd */ = {
+			isa = PBXGroup;
+			children = (
+				83FB57E0F69C47079561DC8F /* Source Files */,
+				FF618A681A6F44E5AAF9E2D5 /* Header Files */,
+				44D05218CBC54FF59966822A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/CMakeLists.txt */,
+			);
+			name = Jnd;
+			sourceTree = "<group>";
+		};
+		8B232AC5A50242498FEAF397 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		A2F1851294EE4CA9AB2FF276 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		D35DA3CDC5ED40AD90A44AB8 = {
+			isa = PBXGroup;
+			children = (
+				887A377060E54992BD2DAE89 /* Jnd */,
+				04B01CF9EE1A4899907F8524 /* ALL_BUILD */,
+				1B2629310E0B480C91B0E56D /* ZERO_CHECK */,
+				821DC297754E4878A8A5C555 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FF618A681A6F44E5AAF9E2D5 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				E6D81BFF0934464284F8EBF6 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.h */,
+				7261C5A3446245A289B8C0AA /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.h */,
+				CAA90CF0958C4E4CA491C215 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.h */,
+				9AD28A39E8EE4603A3C39DC7 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_define.h */,
+				D27E889297F04717B7A1700E /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.h */,
+				7BD0555C36F249088E88ABCB /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		77D1AEB62896494788D8D8A5 /* Jnd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F9F1C9ED30624496B8F87B4F /* Build configuration list for PBXNativeTarget "Jnd" */;
+			buildPhases = (
+				2C2B6251AB25457AA85012C2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D1E9C15C5CA94724B47F2DB6 /* PBXTargetDependency */,
+			);
+			name = Jnd;
+			productName = Jnd;
+			productReference = 6CF1568167A549B3A22DA257 /* Jnd */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7F69D722FE9A472FBE17C724 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1130;
+			};
+			buildConfigurationList = B8040EDFC716477CB2172CB1 /* Build configuration list for PBXProject "Jnd" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				5BD00630002846AE844D61D6 /* Debug */,
+				F2D5041BB3544B2592D84749 /* Release */,
+			);
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = D35DA3CDC5ED40AD90A44AB8;
+			projectDirPath = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd;
+			projectRoot = "";
+			targets = (
+				CBEE63402E314ABBAA89090F /* ALL_BUILD */,
+				77D1AEB62896494788D8D8A5 /* Jnd */,
+				8BC3DBD770484D71AD6E29DF /* ZERO_CHECK */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		06DF3498CE14496ABFE527E0 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		468702F6132343CBA1981DA9 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd -f /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		8A00DA82B1184D63B8292A6D = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		B5C5533331944FDAAFE051D9 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd -f /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2C2B6251AB25457AA85012C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9670185814A64D23B44A092F /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/half_float.mm */,
+				19C40C56B3184CBCA457538A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_metal.mm */,
+				29B51ED6C31243D4BA4B617A /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/jnd_filter_oc.mm */,
+				FD6E438591E84C42B7D68B6B /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_engine.mm */,
+				DF7FFF1E863E4B138052CC86 /* /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libJnd/ios/metal_kernel_cfg.mm */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A3126CB552134A3C8AFC9412 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 77D1AEB62896494788D8D8A5 /* Jnd */;
+			targetProxy = 6D12F60EA6F740608FCCCAA5 /* PBXContainerItemProxy */;
+		};
+		AE3D32D7F95248F09B371148 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8BC3DBD770484D71AD6E29DF /* ZERO_CHECK */;
+			targetProxy = 89115EAE1D604F08B43EB654 /* PBXContainerItemProxy */;
+		};
+		D1E9C15C5CA94724B47F2DB6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8BC3DBD770484D71AD6E29DF /* ZERO_CHECK */;
+			targetProxy = 65FF3F5E750F44D7B246C4A1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0688C4BDD731492AA9BBED58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (armv7,arm64);
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/lib/Release;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",ANDROID);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CPLUSPLUSFLAGS = "-std=c++11     -fno-exceptions -fno-rtti -fPIE                       -fno-bounds-check -funroll-loops -funswitch-loops                       -fvisibility=hidden -finline-functions -funsafe-loop-optimizations  ";
+				OTHER_LIBTOOLFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Jnd;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		06A33D64F81F4F79AE21A334 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		98A7995CBF094CF8B9FCEE61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		A87084DA09D2441E9E73E813 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "armv7 arm64";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_BITCODE = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.2.sdk;
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/build;
+			};
+			name = Debug;
+		};
+		AC514F76F8FA47B28D7C91D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (armv7,arm64);
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/lib/Debug;
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",ANDROID);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CPLUSPLUSFLAGS = "-std=c++11     -fno-exceptions -fno-rtti -fPIE                       -fno-bounds-check -funroll-loops -funswitch-loops                       -fvisibility=hidden -finline-functions -funsafe-loop-optimizations  ";
+				OTHER_LIBTOOLFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Jnd;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		C4517EBC3AAA4224A449CE32 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		E10EDC00C9A64684962E0759 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "armv7 arm64";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_BITCODE = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.2.sdk;
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/build;
+			};
+			name = Release;
+		};
+		FA8B068F2CCF40C2985E24B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../src/libAgoraAI,/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/proj.cmake/libJnd/../../include/opencl);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		09D5550402D647D2BD98DC97 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA8B068F2CCF40C2985E24B7 /* Debug */,
+				C4517EBC3AAA4224A449CE32 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		34DF00E85BE84151A9A6B824 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98A7995CBF094CF8B9FCEE61 /* Debug */,
+				06A33D64F81F4F79AE21A334 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B8040EDFC716477CB2172CB1 /* Build configuration list for PBXProject "Jnd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A87084DA09D2441E9E73E813 /* Debug */,
+				E10EDC00C9A64684962E0759 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F9F1C9ED30624496B8F87B4F /* Build configuration list for PBXNativeTarget "Jnd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC514F76F8FA47B28D7C91D2 /* Debug */,
+				0688C4BDD731492AA9BBED58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7F69D722FE9A472FBE17C724 /* Project object */;
+}

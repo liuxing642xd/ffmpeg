@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../lib/libAgoraAI.a  CMakeFiles/AgoraAI.dir/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/src/libAgoraAI/core/tensor.cpp.o CMakeFiles/AgoraAI.dir/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/src/libAgoraAI/core/utils.cpp.o
+/usr/bin/ranlib ../lib/libAgoraAI.a

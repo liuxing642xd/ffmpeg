@@ -271,6 +271,7 @@ extern AVFilter ff_vf_il;
 extern AVFilter ff_vf_inflate;
 extern AVFilter ff_vf_interlace;
 extern AVFilter ff_vf_interleave;
+extern AVFilter ff_vf_jnd;
 extern AVFilter ff_vf_kerndeint;
 extern AVFilter ff_vf_lagfun;
 extern AVFilter ff_vf_lenscorrection;

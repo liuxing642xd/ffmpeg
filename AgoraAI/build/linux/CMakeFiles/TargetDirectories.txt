@@ -1,0 +1,11 @@
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/CMakeFiles/rebuild_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/CMakeFiles/edit_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libAgoraAI/CMakeFiles/rebuild_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libAgoraAI/CMakeFiles/AgoraAI.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libAgoraAI/CMakeFiles/edit_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libJnd/CMakeFiles/rebuild_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libJnd/CMakeFiles/Jnd.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/libJnd/CMakeFiles/edit_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/test/CMakeFiles/rebuild_cache.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/test/CMakeFiles/testJnd.dir
+/home/agoravideo/Downloads/ffmpeg-4.2.1/AgoraAI/build/linux/test/CMakeFiles/edit_cache.dir
