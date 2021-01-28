@@ -1,4 +1,3 @@
-*.a
 *.o
 *.o.*
 *.d
@@ -39,3 +38,14 @@
 /tools/python/__pycache__/
 
 .vscode/
+.DS_Store
+
+libavcodec.a
+libavdevice.a
+libavfilter.a
+libavformat.a
+libavutil.a
+libpostproc.a
+libswresample.a
+libswscale.a
+
