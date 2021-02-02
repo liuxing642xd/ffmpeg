@@ -37,6 +37,7 @@
 /mapfile
 /tools/python/__pycache__/
 
+build/
 .vscode/
 .DS_Store
 

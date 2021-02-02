@@ -1,5 +1,0 @@
-/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/CMakeFiles/ALL_BUILD.dir
-/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/CMakeFiles/ZERO_CHECK.dir
-/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/CMakeFiles/Jnd.dir
-/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/CMakeFiles/ALL_BUILD.dir
-/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/build/ios/libJnd/CMakeFiles/ZERO_CHECK.dir

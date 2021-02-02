@@ -1,2 +1,0 @@
-/Users/chenfeifei/Android/android-ndk-r16b/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/bin/aarch64-linux-android-gcc-ar qc ../lib/libAgoraAI.a  CMakeFiles/AgoraAI.dir/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libAgoraAI/core/tensor.cpp.o CMakeFiles/AgoraAI.dir/Users/chenfeifei/DeepLearning/algorithm/AgoraAI/src/libAgoraAI/core/utils.cpp.o
-/Users/chenfeifei/Android/android-ndk-r16b/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/bin/aarch64-linux-android-gcc-ranlib ../lib/libAgoraAI.a
