@@ -56,6 +56,7 @@
 
 #define MIN_MATRIX_SIZE 3
 #define MAX_MATRIX_SIZE 63
+#define CUDA_FRAME_ALIGNMENT 256
 
 static const enum AVPixelFormat supported_formats[] = {
     AV_PIX_FMT_YUV420P,
@@ -83,7 +84,7 @@ typedef struct NPPUnsharpStageContext {
     struct {
         int width;
         int height;
-    } planes_in[3], planes_out[3];
+    } planes[3];
 
     AVBufferRef *frames_ctx;
     AVFrame     *frame;
@@ -91,15 +92,39 @@ typedef struct NPPUnsharpStageContext {
 
 typedef struct NPPUnsharpContext {
     const AVClass *class;
-    int lmsize_x, lmsize_y, cmsize_x, cmsize_y;
-    float lamount, camount;
-    int opencl;
+    int lmsize_xy;
+    float lamount;
+
+    NppiMaskSize mask;
 
     NPPUnsharpStageContext stages[STAGE_NB];
     AVFrame *tmp_frame;
     int passthrough;
     uint8_t *tmp_buffer;
 } NPPUnsharpContext;
+
+static NppiMaskSize get_mask_size(int xy) {
+    NppiMaskSize mask;
+    if (xy == 3) {
+        mask = NPP_MASK_SIZE_3_X_3;
+    } else if (xy == 5) {
+        mask = NPP_MASK_SIZE_5_X_5;
+    } else if (xy == 7) {
+        mask = NPP_MASK_SIZE_7_X_7;
+    } else if (xy == 9) {
+        mask = NPP_MASK_SIZE_9_X_9;
+    } else if (xy == 11) {
+        mask = NPP_MASK_SIZE_11_X_11;
+    } else if (xy == 13) {
+        mask = NPP_MASK_SIZE_13_X_13;
+    } else if (xy == 15) {
+        mask = NPP_MASK_SIZE_15_X_15;
+    } else {
+        mask = NPP_MASK_SIZE_5_X_5;
+    }
+
+    return mask;
+}
 
 static av_cold int npp_unsharp_init(AVFilterContext *ctx)
 {
@@ -110,11 +135,14 @@ static av_cold int npp_unsharp_init(AVFilterContext *ctx)
         if (!s->stages[i].frame)
             return AVERROR(ENOMEM);
     }
+
     s->tmp_frame = av_frame_alloc();
     if (!s->tmp_frame)
         return AVERROR(ENOMEM);
 
     s->tmp_buffer = NULL;
+
+    s->mask = get_mask_size(s->lmsize_xy);
 
     return 0;
 }
@@ -127,6 +155,7 @@ static av_cold void npp_unsharp_uninit(AVFilterContext *ctx)
         av_frame_free(&s->stages[i].frame);
         av_buffer_unref(&s->stages[i].frames_ctx);
     }
+
     av_frame_free(&s->tmp_frame);
 
     if(s->tmp_buffer) {
@@ -135,14 +164,17 @@ static av_cold void npp_unsharp_uninit(AVFilterContext *ctx)
         CUresult err;
         CUcontext dummy;
 
-        in_frames_ctx = (AVHWFramesContext *)ctx->inputs[0]->hw_frames_ctx->data;
-        device_hwctx = in_frames_ctx->device_ctx->hwctx;
-        err = device_hwctx->internal->cuda_dl->cuCtxPushCurrent(device_hwctx->cuda_ctx);
-        if (err != CUDA_SUCCESS)
-            return;
+        //todo: tmp buffer is not released due to ctx->inputs[0] is a null-pointer.
+        if (ctx->inputs[0]) {
+            in_frames_ctx = (AVHWFramesContext *)ctx->inputs[0]->hw_frames_ctx->data;
+            device_hwctx = in_frames_ctx->device_ctx->hwctx;
+            err = device_hwctx->internal->cuda_dl->cuCtxPushCurrent(device_hwctx->cuda_ctx);
+            if (err != CUDA_SUCCESS)
+                return;
 
-        device_hwctx->internal->cuda_dl->cuMemFree((CUdeviceptr)s->tmp_buffer);
-        device_hwctx->internal->cuda_dl->cuCtxPopCurrent(&dummy);
+            device_hwctx->internal->cuda_dl->cuMemFree((CUdeviceptr)s->tmp_buffer);
+            device_hwctx->internal->cuda_dl->cuCtxPopCurrent(&dummy);
+        }
     }
 }
 
@@ -167,16 +199,10 @@ static int init_stage(NPPUnsharpStageContext *stage, AVBufferRef *device_ctx)
 
     av_pix_fmt_get_chroma_sub_sample(stage->in_fmt,  &in_sw,  &in_sh);
     av_pix_fmt_get_chroma_sub_sample(stage->out_fmt, &out_sw, &out_sh);
-    if (!stage->planes_out[0].width) {
-        stage->planes_out[0].width  = stage->planes_in[0].width;
-        stage->planes_out[0].height = stage->planes_in[0].height;
-    }
 
-    for (i = 1; i < FF_ARRAY_ELEMS(stage->planes_in); i++) {
-        stage->planes_in[i].width   = stage->planes_in[0].width   >> in_sw;
-        stage->planes_in[i].height  = stage->planes_in[0].height  >> in_sh;
-        stage->planes_out[i].width  = stage->planes_out[0].width  >> out_sw;
-        stage->planes_out[i].height = stage->planes_out[0].height >> out_sh;
+    for (i = 1; i < FF_ARRAY_ELEMS(stage->planes); i++) {
+        stage->planes[i].width   = stage->planes[0].width   >> in_sw;
+        stage->planes[i].height  = stage->planes[0].height  >> in_sh;
     }
 
     out_ref = av_hwframe_ctx_alloc(device_ctx);
@@ -186,8 +212,8 @@ static int init_stage(NPPUnsharpStageContext *stage, AVBufferRef *device_ctx)
 
     out_ctx->format    = AV_PIX_FMT_CUDA;
     out_ctx->sw_format = stage->out_fmt;
-    out_ctx->width     = stage->planes_out[0].width;//FFALIGN(stage->planes_out[0].width,  32);
-    out_ctx->height    = stage->planes_out[0].height;//FFALIGN(stage->planes_out[0].height, 32);
+    out_ctx->width     = FFALIGN(stage->planes[0].width,  32);
+    out_ctx->height    = FFALIGN(stage->planes[0].height, 32);
 
     ret = av_hwframe_ctx_init(out_ref);
     if (ret < 0)
@@ -198,8 +224,8 @@ static int init_stage(NPPUnsharpStageContext *stage, AVBufferRef *device_ctx)
     if (ret < 0)
         goto fail;
 
-    stage->frame->width  = stage->planes_out[0].width;
-    stage->frame->height = stage->planes_out[0].height;
+    stage->frame->width  = stage->planes[0].width;
+    stage->frame->height = stage->planes[0].height;
 
     av_buffer_unref(&stage->frames_ctx);
     stage->frames_ctx = out_ref;
@@ -254,6 +280,7 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
     }
     in_frames_ctx = (AVHWFramesContext*)ctx->inputs[0]->hw_frames_ctx->data;
     in_format     = in_frames_ctx->sw_format;
+    out_format    = in_format;
 
     if (!format_is_supported(in_format)) {
         av_log(ctx, AV_LOG_ERROR, "Unsupported input format: %s\n",
@@ -262,8 +289,9 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
     }
 
     in_deinterleaved_format  = get_deinterleaved_format(in_format);
-    //out_deinterleaved_format = get_deinterleaved_format(out_format);
-    if (in_deinterleaved_format  == AV_PIX_FMT_NONE) {
+    out_deinterleaved_format = get_deinterleaved_format(out_format);
+    if (in_deinterleaved_format  == AV_PIX_FMT_NONE
+        || out_deinterleaved_format  == AV_PIX_FMT_NONE) {
         av_log(ctx, AV_LOG_ERROR, "in_deinterleaved_format none!\n");
         return AVERROR_BUG;
     }
@@ -277,22 +305,20 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
         s->stages[STAGE_UNSHARP].stage_needed = 1;
     }
 
-    s->stages[STAGE_DEINTERLEAVE].in_fmt              = in_format;
-    s->stages[STAGE_DEINTERLEAVE].out_fmt             = in_deinterleaved_format;
-    s->stages[STAGE_DEINTERLEAVE].planes_in[0].width  = inlink->w;
-    s->stages[STAGE_DEINTERLEAVE].planes_in[0].height = inlink->h;
+    s->stages[STAGE_DEINTERLEAVE].in_fmt           = in_format;
+    s->stages[STAGE_DEINTERLEAVE].out_fmt          = in_deinterleaved_format;
+    s->stages[STAGE_DEINTERLEAVE].planes[0].width  = inlink->w;
+    s->stages[STAGE_DEINTERLEAVE].planes[0].height = inlink->h;
 
-    s->stages[STAGE_UNSHARP].in_fmt               = in_deinterleaved_format;
-    s->stages[STAGE_UNSHARP].out_fmt              = in_deinterleaved_format;
-    s->stages[STAGE_UNSHARP].planes_in[0].width   = inlink->w;
-    s->stages[STAGE_UNSHARP].planes_in[0].height  = inlink->h;
-    s->stages[STAGE_UNSHARP].planes_out[0].width  = inlink->w;
-    s->stages[STAGE_UNSHARP].planes_out[0].height = inlink->h;
+    s->stages[STAGE_UNSHARP].in_fmt            = in_deinterleaved_format;
+    s->stages[STAGE_UNSHARP].out_fmt           = out_deinterleaved_format;
+    s->stages[STAGE_UNSHARP].planes[0].width   = inlink->w;
+    s->stages[STAGE_UNSHARP].planes[0].height  = inlink->h;
 
-    s->stages[STAGE_INTERLEAVE].in_fmt              = in_deinterleaved_format;
-    s->stages[STAGE_INTERLEAVE].out_fmt             = in_format;
-    s->stages[STAGE_INTERLEAVE].planes_in[0].width  = inlink->w;
-    s->stages[STAGE_INTERLEAVE].planes_in[0].height = inlink->h;
+    s->stages[STAGE_INTERLEAVE].in_fmt           = out_deinterleaved_format;
+    s->stages[STAGE_INTERLEAVE].out_fmt          = out_format;
+    s->stages[STAGE_INTERLEAVE].planes[0].width  = inlink->w;
+    s->stages[STAGE_INTERLEAVE].planes[0].height = inlink->h;
 
     /* init the hardware contexts */
     for (i = 0; i < FF_ARRAY_ELEMS(s->stages); i++) {
@@ -314,6 +340,24 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
     if (!ctx->outputs[0]->hw_frames_ctx)
         return AVERROR(ENOMEM);
 
+    {
+        CUdeviceptr data;
+        CUcontext dummy;
+        AVCUDADeviceContext *device_hwctx = in_frames_ctx->device_ctx->hwctx;
+
+        CUresult err = device_hwctx->internal->cuda_dl->cuCtxPushCurrent(device_hwctx->cuda_ctx);
+        if (err != CUDA_SUCCESS)
+            return AVERROR_UNKNOWN;
+
+        err = device_hwctx->internal->cuda_dl->cuMemAlloc(&data, FFALIGN(inlink->w, CUDA_FRAME_ALIGNMENT) * inlink->h * 2);
+        if (err == CUDA_SUCCESS)
+            s->tmp_buffer = (uint8_t *)data;
+
+        device_hwctx->internal->cuda_dl->cuCtxPopCurrent(&dummy);
+        if (err < 0)
+            return AVERROR_UNKNOWN;
+    }
+
     return 0;
 }
 
@@ -323,17 +367,8 @@ static int nppunsharp_config_props(AVFilterLink *link)
     AVFilterContext *ctx = link->src;
     AVFilterLink *inlink = link->src->inputs[0];
     const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(link->format);
-    int ret;
 
-    int tmp1 = AV_PIX_FMT_BGR32;
-    int tmp2 = AV_PIX_FMT_NV12;
-
-    fprintf(stderr, "FMT BGR32: %d, FMT NV12: %d\n", tmp1, tmp2);
-
-    fprintf(stderr, "unsharp_ npp link format: %d, desc:%s\n",
-        link->format, desc->name);
-
-    ret = init_processing_chain(ctx, inlink);
+    int ret = init_processing_chain(ctx, inlink);
     if (ret < 0)
         return ret;
 
@@ -371,46 +406,87 @@ if (err != NPP_SUCCESS) { \
     return AVERROR_UNKNOWN; \
 }
 
+static void dump_frame(AVFrame *src, const char *name) {
+    AVFrame *frame;
+
+    if (!src || !src->data)
+        return;
+
+    frame = av_frame_alloc();
+    if (src->format == AV_PIX_FMT_CUDA) {
+        frame->format = AV_PIX_FMT_YUV420P;
+        if ((av_hwframe_transfer_data(frame, src, 0)) < 0) {
+            fprintf(stderr, "hw frame transfer failed!\n");
+        }
+
+        av_frame_copy_props(frame, src);
+    } else {
+        av_frame_ref(frame, src);
+    }
+
+    if (frame->format == AV_PIX_FMT_YUV420P) {
+        FILE *fp = fopen(name, "wb");
+        if (fp) {
+            fwrite(frame->data[0], 1, frame->width*frame->height, fp);
+            fwrite(frame->data[1], 1, frame->width*frame->height/4, fp);
+            fwrite(frame->data[2], 1, frame->width*frame->height/4, fp);
+            fclose(fp);
+            fp = NULL;
+        }
+    }
+
+    av_frame_free(&frame);
+}
+
 static int npp_unsharp(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
                            AVFrame *out, AVFrame *in)
 {
     //AVFilterLink *inlink = ctx->inputs[0];
-    //NPPUnsharpContext *s = ctx->priv;
+    NPPUnsharpContext *s = ctx->priv;
     NppStatus err;
     int i;
 
-    for (i = 0; i < FF_ARRAY_ELEMS(stage->planes_in) && i < FF_ARRAY_ELEMS(in->data) && in->data[i]; i++) {
-        int iw = stage->planes_in[i].width;
-        int ih = stage->planes_in[i].height;
-        int ow = stage->planes_out[i].width;
-        int oh = stage->planes_out[i].height;
+    for (i = 0; i < FF_ARRAY_ELEMS(stage->planes) && i < FF_ARRAY_ELEMS(in->data) && in->data[i]; i++) {
+        int w = stage->planes[i].width;
+        int h = stage->planes[i].height;
+        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT);
 
-        err = nppiFilterGaussBorder_8u_C1R (in->data[i], in->linesize[i], (NppiSize){iw, ih}, (NppiPoint){0, 0},
-                                     out->data[i], out->linesize[i], (NppiSize){ow, oh},
-                                     NPP_MASK_SIZE_5_X_5, NPP_BORDER_REPLICATE);
+        if (i > 0) {
+            err = nppiAddC_8u_C1RSfs(in->data[i], in->linesize[i],  0,
+                                    out->data[i], out->linesize[i], (NppiSize){w, h}, 0);
+            if (err != NPP_SUCCESS) {
+                av_log(ctx, AV_LOG_ERROR, "nppiFilterGaussBorder_8u_C1R error: %d, plane %d\n", err, i);
+                return AVERROR_UNKNOWN;
+            }
+
+            continue;
+        }
+
+        err = nppiFilterGaussBorder_8u_C1R (in->data[i], in->linesize[i], (NppiSize){w, h}, (NppiPoint){0, 0},
+                                     s->tmp_buffer, aligned_w, (NppiSize){w, h},
+                                     s->mask, NPP_BORDER_REPLICATE);
         if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "NPP nppiFilterGaussBorder_8u_C1R error: %d, plane %d\n", err, i);
+            av_log(ctx, AV_LOG_ERROR, "nppiFilterGaussBorder_8u_C1R error: %d, plane %d\n", err, i);
             return AVERROR_UNKNOWN;
         }
 
-
-        err = nppiSub_8u_C1IRSfs (in->data[i], in->linesize[i], out->data[i], out->linesize[i],
-                            (NppiSize){ow, oh}, 0);
+        err = nppiSub_8u_C1RSfs (s->tmp_buffer, aligned_w, in->data[i], in->linesize[i],
+                                out->data[i], out->linesize[i],(NppiSize){w, h}, 0);
         if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "NPP nppiSub_8u_C1IRSfs error: %d, plane %d\n", err, i);
+            av_log(ctx, AV_LOG_ERROR, "nppiSub_8u_C1RSfs error: %d, plane %d\n", err, i);
             return AVERROR_UNKNOWN;
         }
-        
+
+        err = nppiMulC_8u_C1IRSfs (s->lamount, out->data[i], out->linesize[i], (NppiSize){w, h}, 0);
+        if (err != NPP_SUCCESS) {
+            av_log(ctx, AV_LOG_ERROR, "nppiMulC_8u_C1IRSfs error: %d, plane %d\n", err, i);
+            return AVERROR_UNKNOWN;
+        }
+
         err = nppiAdd_8u_C1IRSfs (in->data[i], in->linesize[i], out->data[i], out->linesize[i],
-                            (NppiSize){ow, oh}, 0);
+                            (NppiSize){w, h}, 0);
         if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "NPP nppiAdd_8u_C1IRSfs error: %d, plane %d\n", err, i);
-            return AVERROR_UNKNOWN;
-        }
-
-
-        if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "NPP resize error: %d\n", err);
+            av_log(ctx, AV_LOG_ERROR, "nppiAdd_8u_C1IRSfs error: %d, plane %d\n", err, i);
             return AVERROR_UNKNOWN;
         }
     }
@@ -530,19 +606,10 @@ fail:
 #define MIN_SIZE 3
 #define MAX_SIZE 23
 static const AVOption npp_unsharp_options[] = {
-    { "luma_msize_x",   "set luma matrix horizontal size",   OFFSET(lmsize_x), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "lx",             "set luma matrix horizontal size",   OFFSET(lmsize_x), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "luma_msize_y",   "set luma matrix vertical size",     OFFSET(lmsize_y), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "ly",             "set luma matrix vertical size",     OFFSET(lmsize_y), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
+    { "luma_msize_xy",   "set luma matrix horizontal size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
+    { "lxy",             "set luma matrix horizontal size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
     { "luma_amount",    "set luma effect strength",          OFFSET(lamount),  AV_OPT_TYPE_FLOAT, { .dbl = 1 },       -2,        5, FLAGS },
     { "la",             "set luma effect strength",          OFFSET(lamount),  AV_OPT_TYPE_FLOAT, { .dbl = 1 },       -2,        5, FLAGS },
-    { "chroma_msize_x", "set chroma matrix horizontal size", OFFSET(cmsize_x), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "cx",             "set chroma matrix horizontal size", OFFSET(cmsize_x), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "chroma_msize_y", "set chroma matrix vertical size",   OFFSET(cmsize_y), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "cy",             "set chroma matrix vertical size",   OFFSET(cmsize_y), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "chroma_amount",  "set chroma effect strength",        OFFSET(camount),  AV_OPT_TYPE_FLOAT, { .dbl = 0 },       -2,        5, FLAGS },
-    { "ca",             "set chroma effect strength",        OFFSET(camount),  AV_OPT_TYPE_FLOAT, { .dbl = 0 },       -2,        5, FLAGS },
-    { "opencl",         "ignored",                           OFFSET(opencl),   AV_OPT_TYPE_BOOL,  { .i64 = 0 },        0,        1, FLAGS },
     { NULL }
 };
 
@@ -576,5 +643,5 @@ AVFilter ff_vf_unsharp_npp = {
     .query_formats = npp_unsharp_query_formats,
     .inputs        = avfilter_vf_unsharp_npp_inputs,
     .outputs       = avfilter_vf_unsharp_npp_outputs,
-    .flags         = FF_FILTER_FLAG_HWFRAME_AWARE,
+    .flags_internal= FF_FILTER_FLAG_HWFRAME_AWARE,
 };

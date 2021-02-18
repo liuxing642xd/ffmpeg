@@ -2165,7 +2165,7 @@ static int video_thread(void *arg)
         if (!ret)
             continue;
 
-        av_log(NULL, AV_LOG_INFO, "decoder frame pts: %5ld\n", frame->pts);
+        //av_log(NULL, AV_LOG_INFO, "decoder frame pts: %5ld\n", frame->pts);
 
 #if CONFIG_AVFILTER
         if (   last_w != frame->width
@@ -3077,8 +3077,8 @@ static int read_thread(void *arg)
                     (first_vpkt_ts - read_start_ts)/1000);
             }
 
-            // av_log(NULL, AV_LOG_INFO, "read video pkt pts/dts: %5ld, %5ld\n",
-            //     pkt->pts, pkt->dts);
+            av_log(NULL, AV_LOG_INFO, "read video pkt pts/dts: %5ld, %5ld\n",
+                pkt->pts, pkt->dts);
 
             packet_queue_put(&is->videoq, pkt);
         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
