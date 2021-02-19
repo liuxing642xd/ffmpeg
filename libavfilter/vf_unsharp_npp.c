@@ -71,6 +71,7 @@ static const enum AVPixelFormat deinterleaved_formats[][2] = {
 
 enum UnsharpStage {
     STAGE_DEINTERLEAVE,
+    STAGE_CONTRAST,
     STAGE_UNSHARP,
     STAGE_INTERLEAVE,
     STAGE_NB,
@@ -94,6 +95,7 @@ typedef struct NPPUnsharpContext {
     const AVClass *class;
     int lmsize_xy;
     float lamount;
+    float contrast;
 
     NppiMaskSize mask;
 
@@ -302,6 +304,7 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
         if (out_format != out_deinterleaved_format)
             s->stages[STAGE_INTERLEAVE].stage_needed = 1;
 
+        s->stages[STAGE_CONTRAST].stage_needed = 1;
         s->stages[STAGE_UNSHARP].stage_needed = 1;
     }
 
@@ -309,6 +312,11 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
     s->stages[STAGE_DEINTERLEAVE].out_fmt          = in_deinterleaved_format;
     s->stages[STAGE_DEINTERLEAVE].planes[0].width  = inlink->w;
     s->stages[STAGE_DEINTERLEAVE].planes[0].height = inlink->h;
+
+    s->stages[STAGE_CONTRAST].in_fmt            = in_deinterleaved_format;
+    s->stages[STAGE_CONTRAST].out_fmt           = out_deinterleaved_format;
+    s->stages[STAGE_CONTRAST].planes[0].width   = inlink->w;
+    s->stages[STAGE_CONTRAST].planes[0].height  = inlink->h;
 
     s->stages[STAGE_UNSHARP].in_fmt            = in_deinterleaved_format;
     s->stages[STAGE_UNSHARP].out_fmt           = out_deinterleaved_format;
@@ -438,6 +446,41 @@ static void dump_frame(AVFrame *src, const char *name) {
     av_frame_free(&frame);
 }
 
+static int npp_contrast(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
+                        AVFrame *out, AVFrame *in)
+{
+    NPPUnsharpContext *s = ctx->priv;
+    NppStatus err;
+    int i, offset = 127 -  128 * s->contrast;
+
+    for (i = 0; i < FF_ARRAY_ELEMS(stage->planes) && i < FF_ARRAY_ELEMS(in->data) && in->data[i]; i++) {
+        int w = stage->planes[i].width;
+        int h = stage->planes[i].height;
+        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT) << 1;
+
+        if (i > 0) {
+            CHECK_RUN (nppiCopy_8u_C1R,
+                (in->data[i], in->linesize[i], out->data[i], out->linesize[i], (NppiSize){w, h}));
+
+            continue;
+        }
+
+        CHECK_RUN (nppiConvert_8u16s_C1R,
+            (in->data[i], in->linesize[i], (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){ w, h }));
+
+        CHECK_RUN (nppiMulC_16s_C1IRSfs,
+            (s->contrast, (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){w, h}, 0));
+
+        CHECK_RUN (nppiAddC_16s_C1IRSfs,
+            (offset, (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){w, h}, 0));
+
+        CHECK_RUN (nppiConvert_16s8u_C1R,
+            ((Npp16s *)s->tmp_buffer, aligned_w, out->data[i], out->linesize[i], (NppiSize){ w, h }));
+    }
+
+    return 0;
+}
+
 static int npp_unsharp(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
                            AVFrame *out, AVFrame *in)
 {
@@ -452,43 +495,25 @@ static int npp_unsharp(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
         int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT);
 
         if (i > 0) {
-            err = nppiAddC_8u_C1RSfs(in->data[i], in->linesize[i],  0,
-                                    out->data[i], out->linesize[i], (NppiSize){w, h}, 0);
-            if (err != NPP_SUCCESS) {
-                av_log(ctx, AV_LOG_ERROR, "nppiFilterGaussBorder_8u_C1R error: %d, plane %d\n", err, i);
-                return AVERROR_UNKNOWN;
-            }
+            CHECK_RUN (nppiAddC_8u_C1RSfs,
+                (in->data[i], in->linesize[i], 0, out->data[i], out->linesize[i], (NppiSize){w, h}, 0));
 
             continue;
         }
 
-        err = nppiFilterGaussBorder_8u_C1R (in->data[i], in->linesize[i], (NppiSize){w, h}, (NppiPoint){0, 0},
-                                     s->tmp_buffer, aligned_w, (NppiSize){w, h},
-                                     s->mask, NPP_BORDER_REPLICATE);
-        if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "nppiFilterGaussBorder_8u_C1R error: %d, plane %d\n", err, i);
-            return AVERROR_UNKNOWN;
-        }
+        CHECK_RUN (nppiFilterGaussBorder_8u_C1R,
+            (in->data[i], in->linesize[i], (NppiSize){w, h}, (NppiPoint){0, 0},
+            s->tmp_buffer, aligned_w, (NppiSize){w, h}, s->mask, NPP_BORDER_REPLICATE));
 
-        err = nppiSub_8u_C1RSfs (s->tmp_buffer, aligned_w, in->data[i], in->linesize[i],
-                                out->data[i], out->linesize[i],(NppiSize){w, h}, 0);
-        if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "nppiSub_8u_C1RSfs error: %d, plane %d\n", err, i);
-            return AVERROR_UNKNOWN;
-        }
+        CHECK_RUN (nppiSub_8u_C1RSfs,
+            (s->tmp_buffer, aligned_w, in->data[i], in->linesize[i],
+            out->data[i], out->linesize[i],(NppiSize){w, h}, 0));
 
-        err = nppiMulC_8u_C1IRSfs (s->lamount, out->data[i], out->linesize[i], (NppiSize){w, h}, 0);
-        if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "nppiMulC_8u_C1IRSfs error: %d, plane %d\n", err, i);
-            return AVERROR_UNKNOWN;
-        }
+        CHECK_RUN (nppiMulC_8u_C1IRSfs,
+            (s->lamount, out->data[i], out->linesize[i], (NppiSize){w, h}, 0));
 
-        err = nppiAdd_8u_C1IRSfs (in->data[i], in->linesize[i], out->data[i], out->linesize[i],
-                            (NppiSize){w, h}, 0);
-        if (err != NPP_SUCCESS) {
-            av_log(ctx, AV_LOG_ERROR, "nppiAdd_8u_C1IRSfs error: %d, plane %d\n", err, i);
-            return AVERROR_UNKNOWN;
-        }
+        CHECK_RUN (nppiAdd_8u_C1IRSfs,
+            (in->data[i], in->linesize[i], out->data[i], out->linesize[i], (NppiSize){w, h}, 0));
     }
 
     return 0;
@@ -521,6 +546,7 @@ static int npp_interleave(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
 static int (*const nppunsharp_process[])(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
                                        AVFrame *out, AVFrame *in) = {
     [STAGE_DEINTERLEAVE] = npp_deinterleave,
+    [STAGE_CONTRAST]     = npp_contrast,
     [STAGE_UNSHARP]      = npp_unsharp,
     [STAGE_INTERLEAVE]   = npp_interleave,
 };
@@ -604,12 +630,13 @@ fail:
 #define OFFSET(x) offsetof(NPPUnsharpContext, x)
 #define FLAGS AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_VIDEO_PARAM
 #define MIN_SIZE 3
-#define MAX_SIZE 23
+#define MAX_SIZE 15
 static const AVOption npp_unsharp_options[] = {
-    { "luma_msize_xy",   "set luma matrix horizontal size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
-    { "lxy",             "set luma matrix horizontal size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
+    { "luma_msize_xy",   "set luma matrix size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
+    { "lxy",             "set luma matrix size",  OFFSET(lmsize_xy), AV_OPT_TYPE_INT,   { .i64 = 5 }, MIN_SIZE, MAX_SIZE, FLAGS },
     { "luma_amount",    "set luma effect strength",          OFFSET(lamount),  AV_OPT_TYPE_FLOAT, { .dbl = 1 },       -2,        5, FLAGS },
     { "la",             "set luma effect strength",          OFFSET(lamount),  AV_OPT_TYPE_FLOAT, { .dbl = 1 },       -2,        5, FLAGS },
+    { "contrast",       "set contrast effect strength",      OFFSET(contrast),  AV_OPT_TYPE_FLOAT, { .dbl = 1 },      -2,        5, FLAGS },
     { NULL }
 };
 
