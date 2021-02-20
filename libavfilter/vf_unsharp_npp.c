@@ -102,7 +102,9 @@ typedef struct NPPUnsharpContext {
     NPPUnsharpStageContext stages[STAGE_NB];
     AVFrame *tmp_frame;
     int passthrough;
-    uint8_t *tmp_buffer;
+
+    uint8_t *tmp_buf0;
+    uint8_t *tmp_buf1;
 } NPPUnsharpContext;
 
 static NppiMaskSize get_mask_size(int xy) {
@@ -142,7 +144,8 @@ static av_cold int npp_unsharp_init(AVFilterContext *ctx)
     if (!s->tmp_frame)
         return AVERROR(ENOMEM);
 
-    s->tmp_buffer = NULL;
+    s->tmp_buf0 = NULL;
+    s->tmp_buf1 = NULL;
 
     s->mask = get_mask_size(s->lmsize_xy);
 
@@ -160,7 +163,7 @@ static av_cold void npp_unsharp_uninit(AVFilterContext *ctx)
 
     av_frame_free(&s->tmp_frame);
 
-    if(s->tmp_buffer) {
+    if(s->tmp_buf0 && s->tmp_buf1) {
         AVHWFramesContext *in_frames_ctx;
         AVCUDADeviceContext *device_hwctx;
         CUresult err;
@@ -174,7 +177,8 @@ static av_cold void npp_unsharp_uninit(AVFilterContext *ctx)
             if (err != CUDA_SUCCESS)
                 return;
 
-            device_hwctx->internal->cuda_dl->cuMemFree((CUdeviceptr)s->tmp_buffer);
+            device_hwctx->internal->cuda_dl->cuMemFree((CUdeviceptr)s->tmp_buf0);
+            device_hwctx->internal->cuda_dl->cuMemFree((CUdeviceptr)s->tmp_buf1);
             device_hwctx->internal->cuda_dl->cuCtxPopCurrent(&dummy);
         }
     }
@@ -357,10 +361,15 @@ static int init_processing_chain(AVFilterContext *ctx, AVFilterLink *inlink)
         if (err != CUDA_SUCCESS)
             return AVERROR_UNKNOWN;
 
-        err = device_hwctx->internal->cuda_dl->cuMemAlloc(&data, FFALIGN(inlink->w, CUDA_FRAME_ALIGNMENT) * inlink->h * 2);
-        if (err == CUDA_SUCCESS)
-            s->tmp_buffer = (uint8_t *)data;
+        err = device_hwctx->internal->cuda_dl->cuMemAlloc(&data, FFALIGN(inlink->w, CUDA_FRAME_ALIGNMENT) * inlink->h * 4);
+        if (err != CUDA_SUCCESS) goto Error;
+        s->tmp_buf0 = (uint8_t *)data;
 
+        err = device_hwctx->internal->cuda_dl->cuMemAlloc(&data, FFALIGN(inlink->w, CUDA_FRAME_ALIGNMENT) * inlink->h * 4);
+        if (err != CUDA_SUCCESS) goto Error;
+        s->tmp_buf1 = (uint8_t *)data;
+
+Error:
         device_hwctx->internal->cuda_dl->cuCtxPopCurrent(&dummy);
         if (err < 0)
             return AVERROR_UNKNOWN;
@@ -451,12 +460,13 @@ static int npp_contrast(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
 {
     NPPUnsharpContext *s = ctx->priv;
     NppStatus err;
-    int i, offset = 127 -  128 * s->contrast;
+    float offset = 127 -  128 * s->contrast;
+    int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(stage->planes) && i < FF_ARRAY_ELEMS(in->data) && in->data[i]; i++) {
         int w = stage->planes[i].width;
         int h = stage->planes[i].height;
-        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT) << 1;
+        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT) << 2;
 
         if (i > 0) {
             CHECK_RUN (nppiCopy_8u_C1R,
@@ -465,17 +475,17 @@ static int npp_contrast(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
             continue;
         }
 
-        CHECK_RUN (nppiConvert_8u16s_C1R,
-            (in->data[i], in->linesize[i], (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){ w, h }));
+        CHECK_RUN (nppiConvert_8u32f_C1R,
+            (in->data[i], in->linesize[i], (Npp32f *)s->tmp_buf0, aligned_w, (NppiSize){ w, h }));
 
-        CHECK_RUN (nppiMulC_16s_C1IRSfs,
-            (s->contrast, (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){w, h}, 0));
+        CHECK_RUN (nppiMulC_32f_C1IR,
+            (s->contrast, (Npp32f *)s->tmp_buf0, aligned_w, (NppiSize){w, h}));
 
-        CHECK_RUN (nppiAddC_16s_C1IRSfs,
-            (offset, (Npp16s *)s->tmp_buffer, aligned_w, (NppiSize){w, h}, 0));
+        CHECK_RUN (nppiAddC_32f_C1IR,
+            (offset, (Npp32f *)s->tmp_buf0, aligned_w, (NppiSize){w, h}));
 
-        CHECK_RUN (nppiConvert_16s8u_C1R,
-            ((Npp16s *)s->tmp_buffer, aligned_w, out->data[i], out->linesize[i], (NppiSize){ w, h }));
+        CHECK_RUN (nppiConvert_32f8u_C1R,
+            ((Npp32f *)s->tmp_buf0, aligned_w, out->data[i], out->linesize[i], (NppiSize){ w, h }, NPP_RND_NEAR));
     }
 
     return 0;
@@ -492,7 +502,7 @@ static int npp_unsharp(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
     for (i = 0; i < FF_ARRAY_ELEMS(stage->planes) && i < FF_ARRAY_ELEMS(in->data) && in->data[i]; i++) {
         int w = stage->planes[i].width;
         int h = stage->planes[i].height;
-        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT);
+        int aligned_w = FFALIGN(w, CUDA_FRAME_ALIGNMENT) << 2;
 
         if (i > 0) {
             CHECK_RUN (nppiAddC_8u_C1RSfs,
@@ -501,19 +511,24 @@ static int npp_unsharp(AVFilterContext *ctx, NPPUnsharpStageContext *stage,
             continue;
         }
 
-        CHECK_RUN (nppiFilterGaussBorder_8u_C1R,
-            (in->data[i], in->linesize[i], (NppiSize){w, h}, (NppiPoint){0, 0},
-            s->tmp_buffer, aligned_w, (NppiSize){w, h}, s->mask, NPP_BORDER_REPLICATE));
+        CHECK_RUN (nppiConvert_8u32f_C1R,
+            (in->data[i], in->linesize[i], (Npp32f*)s->tmp_buf0, aligned_w, (NppiSize){w, h}));
 
-        CHECK_RUN (nppiSub_8u_C1RSfs,
-            (s->tmp_buffer, aligned_w, in->data[i], in->linesize[i],
-            out->data[i], out->linesize[i],(NppiSize){w, h}, 0));
+        CHECK_RUN (nppiFilterGaussBorder_32f_C1R,
+            ((Npp32f*)s->tmp_buf0, aligned_w, (NppiSize){w, h}, (NppiPoint){0, 0},
+            s->tmp_buf1, aligned_w, (NppiSize){w, h}, s->mask, NPP_BORDER_REPLICATE));
 
-        CHECK_RUN (nppiMulC_8u_C1IRSfs,
-            (s->lamount, out->data[i], out->linesize[i], (NppiSize){w, h}, 0));
+        CHECK_RUN (nppiSub_32f_C1IR,
+            (s->tmp_buf0, aligned_w, s->tmp_buf1, aligned_w, (NppiSize){w, h}));
 
-        CHECK_RUN (nppiAdd_8u_C1IRSfs,
-            (in->data[i], in->linesize[i], out->data[i], out->linesize[i], (NppiSize){w, h}, 0));
+        CHECK_RUN (nppiMulC_32f_C1IR,
+            (s->lamount, (Npp32f*)s->tmp_buf1, aligned_w, (NppiSize){w, h}));
+
+        CHECK_RUN (nppiSub_32f_C1IR,
+            (s->tmp_buf1, aligned_w, s->tmp_buf0, aligned_w, (NppiSize){w, h}));
+
+        CHECK_RUN (nppiConvert_32f8u_C1R,
+            ((Npp32f*)s->tmp_buf0, aligned_w, out->data[i], out->linesize[i], (NppiSize){w, h}, NPP_RND_NEAR));
     }
 
     return 0;
