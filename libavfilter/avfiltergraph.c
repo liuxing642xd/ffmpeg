@@ -465,6 +465,7 @@ static int query_formats(AVFilterGraph *graph, AVClass *log_ctx)
     /* go through and merge as many format lists as possible */
     for (i = 0; i < graph->nb_filters; i++) {
         AVFilterContext *filter = graph->filters[i];
+        av_log(log_ctx, AV_LOG_INFO, "The graph filter[%d] is %s, %s.\n", i, filter->filter->name, filter->name);
 
         for (j = 0; j < filter->nb_inputs; j++) {
             AVFilterLink *link = filter->inputs[j];
@@ -546,6 +547,8 @@ static int query_formats(AVFilterGraph *graph, AVClass *log_ctx)
                                                             inst_name, graph->scale_sws_opts, NULL,
                                                             graph)) < 0)
                         return ret;
+
+                    av_log(log_ctx, AV_LOG_INFO, "The graph insert filter scale.\n");
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     if (!(filter = avfilter_get_by_name("aresample"))) {
@@ -560,6 +563,8 @@ static int query_formats(AVFilterGraph *graph, AVClass *log_ctx)
                                                             inst_name, graph->aresample_swr_opts,
                                                             NULL, graph)) < 0)
                         return ret;
+
+                    av_log(log_ctx, AV_LOG_INFO, "The graph insert filter aresample.\n");
                     break;
                 default:
                     return AVERROR(EINVAL);
