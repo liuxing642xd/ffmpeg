@@ -3077,7 +3077,7 @@ static int read_thread(void *arg)
                     (first_vpkt_ts - read_start_ts)/1000);
             }
 
-            av_log(NULL, AV_LOG_INFO, "read video pkt pts/dts: %5ld, %5ld\n",
+            av_log(NULL, AV_LOG_VERBOSE, "read video pkt pts/dts: %5ld, %5ld\n",
                 pkt->pts, pkt->dts);
 
             packet_queue_put(&is->videoq, pkt);
