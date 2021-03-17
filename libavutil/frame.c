@@ -954,3 +954,57 @@ int av_frame_apply_cropping(AVFrame *frame, int flags)
 
     return 0;
 }
+
+void av_frame_dump(AVFrame *src, const char *name) {
+    AVFrame *frame = NULL;
+    enum AVPixelFormat *formats = NULL;
+    int err, i;
+
+    if (!src || !src->data)
+        return;
+
+    frame = av_frame_alloc();
+    if (src->format == AV_PIX_FMT_CUDA) {
+        err = av_hwframe_transfer_get_formats(src->hw_frames_ctx,
+            AV_HWFRAME_TRANSFER_DIRECTION_FROM, &formats, 0);
+        if (err < 0) {
+            av_log(NULL, AV_LOG_ERROR,
+                "%s, av_hwframe_transfer_get_formats error!\n", __FUNCTION__);
+            goto RET;
+        }
+
+        frame->format = formats[0];
+        if ((av_hwframe_transfer_data(frame, src, 0)) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "%s, av_hwframe_transfer_data error!\n", __FUNCTION__);
+            goto RET;
+        }
+
+        av_frame_copy_props(frame, src);
+    } else {
+        av_frame_ref(frame, src);
+    }
+
+    if (frame->format == AV_PIX_FMT_YUV420P ||
+        frame->format == AV_PIX_FMT_YUVA420P) {
+        FILE *fp = fopen(name, "wb");
+        if (fp) {
+            fwrite(frame->data[0], 1, frame->linesize[0]*frame->height, fp);
+            fwrite(frame->data[1], 1, frame->linesize[1]*frame->height/2, fp);
+            fwrite(frame->data[2], 1, frame->linesize[2]*frame->height/2, fp);
+            if (frame->format == AV_PIX_FMT_YUVA420P) {
+                fwrite(frame->data[3], 1, frame->linesize[3]*frame->height, fp);
+            }
+            fclose(fp);
+            fp = NULL;
+        }
+    } else {
+        av_log(NULL, AV_LOG_ERROR, "%s, frame format(%d) not support!\n",
+            __FUNCTION__, frame->format);
+    }
+
+RET:
+    if (formats)
+        av_freep(&formats);
+    if (frame)
+        av_frame_free(&frame);
+}

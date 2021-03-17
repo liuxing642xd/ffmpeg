@@ -969,6 +969,15 @@ int av_frame_apply_cropping(AVFrame *frame, int flags);
 const char *av_frame_side_data_name(enum AVFrameSideDataType type);
 
 /**
+ * Dump raw yuv data to local file.
+ *
+ * @param src frame to be dumpped.
+ * @param name local file name.
+ *
+ */
+void av_frame_dump(AVFrame *src, const char *name);
+
+/**
  * @}
  */
 
