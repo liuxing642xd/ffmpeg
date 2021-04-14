@@ -456,6 +456,8 @@ typedef struct H264Context {
     int is_avc;           ///< this flag is != 0 if codec is avc1
     int nal_length_size;  ///< Number of bytes used for nal length (1, 2 or 4)
 
+    int decoded_info_cached;  ///< whether or not decoded info is added to frame side data
+
     int bit_depth_luma;         ///< luma bit depth from sps to detect changes
     int chroma_format_idc;      ///< chroma format from sps to detect changes
 

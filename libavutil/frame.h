@@ -184,6 +184,11 @@ enum AVFrameSideDataType {
      * Encoding parameters for a video frame, as described by AVVideoEncParams.
      */
     AV_FRAME_DATA_VIDEO_ENC_PARAMS,
+
+    /**
+     * Decoded info of a video frame which will be used during encoding process.
+     */
+    AV_FRAME_DATA_VIDEO_DECODED_INFO,
 };
 
 enum AVActiveFormatDescription {
@@ -266,6 +271,18 @@ typedef struct AVRegionOfInterest {
      */
     AVRational qoffset;
 } AVRegionOfInterest;
+
+/**
+ * Structure describing decoded info. of one video frame
+ */
+typedef struct AVFrameDecodedInfo {
+
+    int64_t rsv0;
+    uint32_t rsv1;
+    uint32_t rsv2;
+    uint32_t rsv3;
+
+} AVFrameDecodedInfo;
 
 /**
  * This structure describes decoded (raw) audio or video data.

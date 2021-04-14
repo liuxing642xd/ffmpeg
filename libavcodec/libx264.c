@@ -439,6 +439,13 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
         }
     }
 
+    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_VIDEO_DECODED_INFO);
+    if (sd) {
+        AVFrameDecodedInfo *info = (AVFrameDecodedInfo*) sd->data;
+        fprintf(stderr, "side data rsv0:%ld, rsv1:%d\n", info->rsv0, info->rsv1);
+
+    }
+
     do {
         if (x264_encoder_encode(x4->enc, &nal, &nnal, frame? &x4->pic: NULL, &pic_out) < 0)
             return AVERROR_EXTERNAL;

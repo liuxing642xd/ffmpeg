@@ -442,6 +442,8 @@ static av_cold int h264_decode_init(AVCodecContext *avctx)
                "Use it at your own risk\n");
     }
 
+    h->decoded_info_cached = 1;
+
     return 0;
 }
 
@@ -989,6 +991,9 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
     int buf_index;
     int ret;
 
+    AVFrameSideData *sd;
+    AVFrameDecodedInfo *info;
+
     h->flags = avctx->flags;
     h->setup_finished = 0;
     h->nb_slice_ctx_queued = 0;
@@ -1012,6 +1017,18 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
             return ff_h264_decode_extradata(buf, buf_size,
                                             &h->ps, &h->is_avc, &h->nal_length_size,
                                             avctx->err_recognition, avctx);
+    }
+
+    if (h->decoded_info_cached) {
+        av_frame_remove_side_data(pict, AV_FRAME_DATA_VIDEO_DECODED_INFO);
+        sd = av_frame_new_side_data(pict, AV_FRAME_DATA_VIDEO_DECODED_INFO, sizeof(AVFrameDecodedInfo));
+        if (!sd) return AVERROR(ENOMEM);
+
+        info = (AVFrameDecodedInfo*) sd->data;
+        info->rsv0 = avpkt->pts;
+        info->rsv1 = 1;
+        info->rsv2 = 2;
+        info->rsv3 = 3;
     }
 
     buf_index = decode_nal_units(h, buf, buf_size);
@@ -1055,6 +1072,7 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption h264_options[] = {
     { "is_avc", "is avc", OFFSET(is_avc), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, 0 },
+    { "decoded_info_cached", "decoded_info_cached", OFFSET(decoded_info_cached), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, 0 },
     { "nal_length_size", "nal_length_size", OFFSET(nal_length_size), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 4, 0 },
     { "enable_er", "Enable error resilience on damaged frames (unsafe)", OFFSET(enable_er), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, VD },
     { "x264_build", "Assume this x264 version if no x264 version found in any SEI", OFFSET(x264_build), AV_OPT_TYPE_INT, {.i64 = -1}, -1, INT_MAX, VD },
