@@ -45,6 +45,7 @@
 #include "h2645_parse.h"
 #include "h264data.h"
 #include "h264chroma.h"
+#include "h264_cache_info.h"
 #include "h264_mvpred.h"
 #include "h264_ps.h"
 #include "golomb.h"
@@ -381,6 +382,9 @@ static av_cold int h264_decode_end(AVCodecContext *avctx)
     ff_h264_unref_picture(h, &h->last_pic_for_ec);
     av_frame_free(&h->last_pic_for_ec.f);
 
+    if (h->need_cache_info)
+        frame_cache_info_uninit(&h->pool);
+
     return 0;
 }
 
@@ -442,7 +446,8 @@ static av_cold int h264_decode_init(AVCodecContext *avctx)
                "Use it at your own risk\n");
     }
 
-    h->decoded_info_cached = 1;
+    if (h->need_cache_info)
+        frame_cache_info_init(&h->pool);
 
     return 0;
 }
@@ -992,7 +997,7 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
     int ret;
 
     AVFrameSideData *sd;
-    AVFrameDecodedInfo *info;
+    FrameCachedInfo *info;
 
     h->flags = avctx->flags;
     h->setup_finished = 0;
@@ -1019,16 +1024,21 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
                                             avctx->err_recognition, avctx);
     }
 
-    if (h->decoded_info_cached) {
-        av_frame_remove_side_data(pict, AV_FRAME_DATA_VIDEO_DECODED_INFO);
-        sd = av_frame_new_side_data(pict, AV_FRAME_DATA_VIDEO_DECODED_INFO, sizeof(AVFrameDecodedInfo));
+    if (h->need_cache_info) {
+        AVBufferRef *buf = request_buffer_from_cache(&h->pool);
+        if (!buf)
+            av_log(avctx, AV_LOG_ERROR, "can not get sida data buffer from pool!\n");
+
+        sd = av_frame_new_side_data_from_buf(pict, AV_FRAME_DATA_VIDEO_DECODED_INFO, buf);
         if (!sd) return AVERROR(ENOMEM);
 
-        info = (AVFrameDecodedInfo*) sd->data;
+        info = (FrameCachedInfo*) sd->data;
         info->rsv0 = avpkt->pts;
         info->rsv1 = 1;
         info->rsv2 = 2;
         info->rsv3 = 3;
+
+        info->used = 1; //must set to true
     }
 
     buf_index = decode_nal_units(h, buf, buf_size);
@@ -1072,7 +1082,7 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption h264_options[] = {
     { "is_avc", "is avc", OFFSET(is_avc), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, 0 },
-    { "decoded_info_cached", "decoded_info_cached", OFFSET(decoded_info_cached), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, 0 },
+    { "need_cache_info", "need_cache_info", OFFSET(need_cache_info), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, 0 },
     { "nal_length_size", "nal_length_size", OFFSET(nal_length_size), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 4, 0 },
     { "enable_er", "Enable error resilience on damaged frames (unsafe)", OFFSET(enable_er), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, VD },
     { "x264_build", "Assume this x264 version if no x264 version found in any SEI", OFFSET(x264_build), AV_OPT_TYPE_INT, {.i64 = -1}, -1, INT_MAX, VD },

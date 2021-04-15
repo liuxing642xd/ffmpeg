@@ -2870,6 +2870,7 @@ static int get_buffer(AVCodecContext *s, AVFrame *frame, int flags)
 static int init_input_stream(int ist_index, char *error, int error_len)
 {
     int ret;
+    int64_t need_cache;
     InputStream *ist = input_streams[ist_index];
 
     if (ist->decoding_needed) {
@@ -2885,6 +2886,10 @@ static int init_input_stream(int ist_index, char *error, int error_len)
         ist->dec_ctx->get_buffer2           = get_buffer;
         ist->dec_ctx->thread_safe_callbacks = 1;
         ist->dec_ctx->thread_type           = 0;
+
+        //save h264 decoding info for transcode
+        if (strcmp(codec->name, "h264") == 0)
+            av_opt_set_int(ist->dec_ctx->priv_data, "need_cache_info", 1, 0);
 
         av_opt_set_int(ist->dec_ctx, "refcounted_frames", 1, 0);
         if (ist->dec_ctx->codec_id == AV_CODEC_ID_DVB_SUBTITLE &&

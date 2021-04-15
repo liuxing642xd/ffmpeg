@@ -29,6 +29,7 @@
 #include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 #include "internal.h"
+#include "h264_cache_info.h"
 #include "packet_internal.h"
 
 #if defined(_MSC_VER)
@@ -437,13 +438,15 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
                 }
             }
         }
-    }
 
-    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_VIDEO_DECODED_INFO);
-    if (sd) {
-        AVFrameDecodedInfo *info = (AVFrameDecodedInfo*) sd->data;
-        fprintf(stderr, "side data rsv0:%ld, rsv1:%d\n", info->rsv0, info->rsv1);
+        sd = av_frame_get_side_data(frame, AV_FRAME_DATA_VIDEO_DECODED_INFO);
+        if (sd) {
+            FrameCachedInfo *info = (FrameCachedInfo*) sd->data;
+            fprintf(stderr, "side data rsv0:%ld, rsv1:%d\n", info->rsv0, info->rsv1);
 
+            info->used = 0; //must set to false after the side data has been used
+
+        }
     }
 
     do {

@@ -273,18 +273,6 @@ typedef struct AVRegionOfInterest {
 } AVRegionOfInterest;
 
 /**
- * Structure describing decoded info. of one video frame
- */
-typedef struct AVFrameDecodedInfo {
-
-    int64_t rsv0;
-    uint32_t rsv1;
-    uint32_t rsv2;
-    uint32_t rsv3;
-
-} AVFrameDecodedInfo;
-
-/**
  * This structure describes decoded (raw) audio or video data.
  *
  * AVFrame must be allocated using av_frame_alloc(). Note that this only
