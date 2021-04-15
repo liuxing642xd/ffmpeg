@@ -458,6 +458,8 @@ int ff_h264_update_thread_context(AVCodecContext *dst,
 static int h264_frame_start(H264Context *h)
 {
     H264Picture *pic;
+    AVFrameSideData *sd;
+    FrameCachedInfo *info;
     int i, ret;
     const int pixel_shift = h->pixel_shift;
 
@@ -500,6 +502,31 @@ static int h264_frame_start(H264Context *h)
 
     if ((ret = alloc_picture(h, pic)) < 0)
         return ret;
+
+    if (h->need_cache_info) {
+        if (!h->pool.pool) {
+            int ret = frame_cache_info_init(&h->pool, h->mb_num);
+            if (ret < 0) {
+                av_log(h->avctx, AV_LOG_ERROR, "frame info cache pool init failed!\n");
+                h->need_cache_info = 0;
+            }
+        }
+
+        if (h->pool.pool) {
+            H264SliceContext *sl = h->slice_ctx + h->nb_slice_ctx_queued;
+            AVBufferRef *bufr = request_buffer_from_cache(&h->pool);
+            if (!bufr)
+                av_log(h->avctx, AV_LOG_ERROR, "can not get sida data buffer from pool!\n");
+
+            sd = av_frame_new_side_data_from_buf(pic->f, AV_FRAME_DATA_VIDEO_DECODED_INFO, bufr);
+            if (!sd) return AVERROR(ENOMEM);
+
+            info = (FrameCachedInfo*) sd->data;
+            info->slice_type = sl->slice_type;
+            info->used = 1;
+            h->info = info;
+        }
+    }
 
     h->cur_pic_ptr = pic;
     ff_h264_unref_picture(h, &h->cur_pic);
@@ -2570,6 +2597,53 @@ static void er_add_slice(H264SliceContext *sl,
     }
 }
 
+static int save_frame_info (H264Context *h, H264SliceContext *sl)
+{
+    if (h->need_cache_info) {
+        int32_t mb_xy = sl->mb_xy;
+        uint32_t mb_type = h->cur_pic.mb_type[mb_xy];
+        uint8_t *intra_pred_mode = h->info->luma_intra_pred_mode + h->mb2b_xy[mb_xy];
+        int16_t *mv_cache = h->info->mv_cache + 2*h->mb2b_xy[mb_xy];
+        int16_t *dct_coff_0 = h->info->dct_coff_0 + h->mb2b_xy[mb_xy];
+
+        h->info->mb_type[mb_xy] = mb_type;
+        h->info->chroma_intra_pred_mode[mb_xy] =
+            h->chroma_pred_mode_table[mb_xy];
+
+        if (IS_INTRA4x4(mb_type)) {
+            int8_t *src = sl->intra4x4_pred_mode_cache + 12;
+            for (int i = 0; i < 4; i++) {
+                memcpy(intra_pred_mode, src, 4);
+                intra_pred_mode += h->b_stride;
+                src += 8;
+            }
+        } else if (IS_INTRA16x16(mb_type)) {
+            for (int i = 0; i < 4; i++) {
+                memset(intra_pred_mode, sl->intra16x16_pred_mode, 4);
+                intra_pred_mode += h->b_stride;
+            }
+
+        } else if (IS_PCM(mb_type)) {
+
+        } else {
+            for (int i = 0; i < 4; i++) {
+                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 0][0]), 4);
+                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 1][0]), 4);
+                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 2][0]), 4);
+                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 3][0]), 4);
+            }
+        }
+
+        for(int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                dct_coff_0[i * h->b_stride + j] = sl->mb[i*4*16 + j*4];
+
+        return 0;
+    }
+
+    return -1;
+}
+
 static int decode_slice(struct AVCodecContext *avctx, void *arg)
 {
     H264SliceContext *sl = arg;
@@ -2630,8 +2704,10 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
 
             ret = ff_h264_decode_mb_cabac(h, sl);
 
-            if (ret >= 0)
+            if (ret >= 0) {
+                save_frame_info (h, sl);
                 ff_h264_hl_decode_mb(h, sl);
+            }
 
             // FIXME optimal? or let mb_decode decode 16x32 ?
             if (ret >= 0 && FRAME_MBAFF(h)) {
@@ -2701,8 +2777,10 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
 
             ret = ff_h264_decode_mb_cavlc(h, sl);
 
-            if (ret >= 0)
+            if (ret >= 0) {
+                save_frame_info (h, sl);
                 ff_h264_hl_decode_mb(h, sl);
+            }
 
             // FIXME optimal? or let mb_decode decode 16x32 ?
             if (ret >= 0 && FRAME_MBAFF(h)) {
