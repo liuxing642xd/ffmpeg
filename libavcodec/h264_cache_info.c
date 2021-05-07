@@ -27,7 +27,6 @@
 #include "libavutil/error.h"
 #include "h264_cache_info.h"
 
-
 int frame_cache_info_init(FrameCachedInfoPool *cache, int32_t mb_num)
 {
     int i;

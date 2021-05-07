@@ -45,6 +45,7 @@
 #include "h2645_parse.h"
 #include "h264data.h"
 #include "h264chroma.h"
+#include "h264_cache_info.h"
 #include "h264_mvpred.h"
 #include "h264_ps.h"
 #include "golomb.h"
