@@ -39,7 +39,8 @@ int frame_cache_info_init(FrameCachedInfoPool *cache, int32_t mb_num)
     }
 
     uint32_t size = sizeof(FrameCachedInfo);
-    size += mb_num * sizeof(uint32_t); //mb_type
+    size += mb_num; //mb_type
+    size += mb_num; //mb_partition
     size += mb_num * 16; //block4x4 lum pred mode
     size += mb_num; //chroma pred mode
     size += mb_num * 16 * 2 * sizeof(int16_t); //mv cache
@@ -58,7 +59,8 @@ int frame_cache_info_init(FrameCachedInfoPool *cache, int32_t mb_num)
         FrameCachedInfo *info = (FrameCachedInfo*) cache->bufs[i]->data;
         info->used = 0;
         info->mb_type = info + sizeof(FrameCachedInfo);
-        info->luma_intra_pred_mode = info->mb_type + mb_num *sizeof(uint32_t);
+        info->mb_partition = info->mb_type + mb_num;
+        info->luma_intra_pred_mode = info->mb_partition + mb_num;
         info->chroma_intra_pred_mode = info->luma_intra_pred_mode + mb_num * 16;
         info->mv_cache = info->chroma_intra_pred_mode + mb_num;
         info->dct_coff_0 = info->mv_cache + mb_num * 16 * 2 * sizeof(int16_t);

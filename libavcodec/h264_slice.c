@@ -2603,29 +2603,115 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
         int32_t mb_xy = sl->mb_xy;
         uint32_t mb_type = h->cur_pic.mb_type[mb_xy];
         uint8_t *intra_pred_mode = h->info->luma_intra_pred_mode + h->mb2b_xy[mb_xy];
-        int16_t *mv_cache = h->info->mv_cache + 2*h->mb2b_xy[mb_xy];
         int16_t *dct_coff_0 = h->info->dct_coff_0 + h->mb2b_xy[mb_xy];
 
-        h->info->mb_type[mb_xy] = mb_type;
+        int8_t pred_mode = 0;
+        int8_t *src_mode = sl->intra4x4_pred_mode_cache + 12;
+
+        //not support B frame
+        switch (mb_type & 0xFFF)
+        {
+        case MB_TYPE_16x16:
+            if (sl->sub_mb_type[0]) {
+                h->info->mb_type[mb_xy] = P_8x8;
+                h->info->mb_partition[mb_xy] = D_L0_8x8;
+            } else {
+                h->info->mb_type[mb_xy] = P_L0;
+                h->info->mb_partition[mb_xy] = D_16x16;
+            }
+            break;
+
+        case MB_TYPE_16x8:
+            if (sl->sub_mb_type[0]) {
+                h->info->mb_type[mb_xy] = P_8x8;
+                h->info->mb_partition[mb_xy] = D_L0_8x4;
+            } else {
+                h->info->mb_type[mb_xy] = P_L0;
+                h->info->mb_partition[mb_xy] = D_16x8;
+            }
+            break;
+
+        case MB_TYPE_8x16:
+            if (sl->sub_mb_type[0]) {
+                h->info->mb_type[mb_xy] = P_8x8;
+                h->info->mb_partition[mb_xy] = D_L0_4x8;
+            } else {
+                h->info->mb_type[mb_xy] = P_L0;
+                h->info->mb_partition[mb_xy] = D_8x16;
+            }
+            break;
+
+        case MB_TYPE_8x8:
+            if (sl->sub_mb_type[0]) {
+                h->info->mb_type[mb_xy] = P_8x8;
+                h->info->mb_partition[mb_xy] = D_L0_4x4;
+            } else {
+                h->info->mb_type[mb_xy] = P_L0;
+                h->info->mb_partition[mb_xy] = D_8x8;
+            }
+            break;
+
+        case MB_TYPE_SKIP:
+            h->info->mb_type[mb_xy] = P_SKIP;
+            h->info->mb_partition[mb_xy] = D_16x16;
+            break;
+
+        case MB_TYPE_INTRA16x16:
+            h->info->mb_type[mb_xy] = I_16x16;
+
+            switch (sl->intra16x16_pred_mode)
+            {
+            case VERT_PRED8x8:
+                pred_mode = I_PRED_16x16_V;
+                break;
+            case HOR_PRED8x8:
+                pred_mode = I_PRED_16x16_H;
+                break;
+            case DC_PRED8x8:
+                pred_mode = I_PRED_16x16_DC;
+                break;
+            case PLANE_PRED8x8:
+                pred_mode = I_PRED_16x16_P;
+                break;
+
+            default:
+                break;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                memset(intra_pred_mode, pred_mode, 4);
+                intra_pred_mode += h->b_stride;
+            }
+
+            break;
+
+        case MB_TYPE_INTRA4x4:
+            if (mb_type & MB_TYPE_8x8DCT) {
+                h->info->mb_type[mb_xy] = I_8x8;
+            } else {
+                h->info->mb_type[mb_xy] = I_4x4;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                memcpy(intra_pred_mode, src_mode, 4);
+                intra_pred_mode += h->b_stride;
+                src_mode += 8;
+            }
+            break;
+
+        case MB_TYPE_INTRA_PCM:
+            h->info->mb_type[mb_xy] = I_PCM;
+            break;
+
+        default:
+            break;
+        }
+
         h->info->chroma_intra_pred_mode[mb_xy] =
             h->chroma_pred_mode_table[mb_xy];
 
-        if (IS_INTRA4x4(mb_type)) {
-            int8_t *src = sl->intra4x4_pred_mode_cache + 12;
-            for (int i = 0; i < 4; i++) {
-                memcpy(intra_pred_mode, src, 4);
-                intra_pred_mode += h->b_stride;
-                src += 8;
-            }
-        } else if (IS_INTRA16x16(mb_type)) {
-            for (int i = 0; i < 4; i++) {
-                memset(intra_pred_mode, sl->intra16x16_pred_mode, 4);
-                intra_pred_mode += h->b_stride;
-            }
-
-        } else if (IS_PCM(mb_type)) {
-
-        } else {
+        if (IS_INTER(mb_type)) {
+            int16_t *mv_cache = h->info->mv_cache + 2*h->mb2b_xy[mb_xy];
             for (int i = 0; i < 4; i++) {
                 memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 0][0]), 4);
                 memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 1][0]), 4);
