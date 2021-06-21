@@ -336,6 +336,7 @@ typedef struct H264SliceContext {
     int delta_poc[2];
     int curr_pic_num;
     int max_pic_num;
+    int partition_cnt;
 } H264SliceContext;
 
 /**

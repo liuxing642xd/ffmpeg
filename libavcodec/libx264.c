@@ -441,6 +441,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
 
         sd = av_frame_get_side_data(frame, AV_FRAME_DATA_VIDEO_DECODED_INFO);
         if (sd) {
+            av_log(ctx, AV_LOG_WARNING, "libx264 get decoded cache info: %p\n", sd->data);
             FrameCachedInfo *info = (FrameCachedInfo*) sd->data;
             info->used = 0; //must set to false after the side data has been used
         }

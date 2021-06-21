@@ -774,6 +774,7 @@ decode_intra_mb:
     if (MB_FIELD(sl))
         mb_type |= MB_TYPE_INTERLACED;
 
+    sl->partition_cnt = partition_count;
     h->slice_table[mb_xy] = sl->slice_num;
 
     if(IS_INTRA_PCM(mb_type)){

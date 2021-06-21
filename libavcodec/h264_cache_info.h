@@ -130,6 +130,7 @@ typedef struct FrameCachedInfo {
     int8_t *mb_partition; //size: mb_size
     int8_t *luma_intra_pred_mode; //size: width * height /16
     int8_t *chroma_intra_pred_mode; //size mb_size
+    int8_t *ref_cache; //size mb_size * 16
     int16_t *mv_cache; //size mb_size * 16 *2
     int16_t *dct_coff_0; //size mb_size * 16
 } FrameCachedInfo;

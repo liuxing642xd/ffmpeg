@@ -2597,6 +2597,95 @@ static void er_add_slice(H264SliceContext *sl,
     }
 }
 
+
+static void print_mb_cache(H264Context *h, H264SliceContext *sl)
+{
+    int32_t mb_xy = sl->mb_xy;
+    int16_t *mv_cache = h->info->mv_cache + 2*h->mb2b_xy[mb_xy];
+    uint8_t *intra_pred_mode = h->info->luma_intra_pred_mode
+                             + h->mb2b_xy[mb_xy];
+
+    FILE* dump_info;
+    dump_info = fopen("dec_dump_info.txt", "a");
+
+    fprintf(dump_info, "mb(%3d, %3d): ", sl->mb_x, sl->mb_y);
+
+    fprintf(dump_info, "%d ", h->info->mb_type[mb_xy]);
+    switch (h->info->mb_type[mb_xy])
+    {
+    case I_4x4:
+        /* code */
+        for (int i = 0; i < 4; i++)
+        {
+            int x = i & 0x1 ? 2 : 0;
+            int y = i < 2 ? 0 : 2;
+
+            fprintf(dump_info, "%d %d ",
+                intra_pred_mode[h->b_stride * y + x], intra_pred_mode[h->b_stride * y + (x+1)]);
+            fprintf(dump_info, "%d %d ",
+                intra_pred_mode[h->b_stride * (y+1) + x], intra_pred_mode[h->b_stride * (y+1) + (x+1)]);
+        }
+        break;
+    case I_8x8:
+        /* code */
+        for (int i = 0; i < 2; i++)
+        {
+            fprintf(dump_info, "%d ", intra_pred_mode[0]);
+            fprintf(dump_info, "%d ", intra_pred_mode[2]);
+
+            intra_pred_mode +=  2*h->b_stride;
+        }
+        break;
+    case I_16x16:
+        /* code */
+        fprintf(dump_info, "%d ", intra_pred_mode[0]);
+        break;
+    case I_PCM:
+        /* code */
+        break;
+    case P_L0:
+        /* code */
+        fprintf(dump_info, "%d ", h->info->mb_partition[mb_xy]);
+        switch( h->info->mb_partition[mb_xy] )
+        {
+            case D_16x16:
+                fprintf(dump_info, "%d %d ", mv_cache[0], mv_cache[1]);
+                break;
+            case D_16x8:
+                fprintf(dump_info, "%d %d ", mv_cache[0], mv_cache[1]);
+                fprintf(dump_info, "%d %d ", mv_cache[4*h->b_stride], mv_cache[4*h->b_stride + 1]);
+
+                break;
+
+            case D_8x16:
+                fprintf(dump_info, "%d %d ", mv_cache[0], mv_cache[1]);
+                fprintf(dump_info, "%d %d ", mv_cache[4], mv_cache[5]);
+                break;
+
+            default:
+                //x264_log( h, X264_LOG_ERROR, "internal error P_L0 and partition=%d\n", h->mb.i_partition );
+                break;
+        }
+        break;
+    case P_8x8:
+        for (int i = 0; i < 2; i++)
+        {
+            fprintf(dump_info, "%d %d ", mv_cache[0], mv_cache[1]);
+            fprintf(dump_info, "%d %d ", mv_cache[4], mv_cache[5]);
+
+            mv_cache += 4*h->b_stride;
+        }
+        break;
+    case P_SKIP:
+        break;
+    default:
+        break;
+    }
+
+    fprintf(dump_info, "\n");
+    fclose(dump_info);
+}
+
 static int save_frame_info (H264Context *h, H264SliceContext *sl)
 {
     if (h->need_cache_info) {
@@ -2609,10 +2698,10 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
         int8_t *src_mode = sl->intra4x4_pred_mode_cache + 12;
 
         //not support B frame
-        switch (mb_type & 0xFFF)
+        switch (mb_type & 0xFF)
         {
         case MB_TYPE_16x16:
-            if (sl->sub_mb_type[0]) {
+            if (sl->partition_cnt == 4) {
                 h->info->mb_type[mb_xy] = P_8x8;
                 h->info->mb_partition[mb_xy] = D_L0_8x8;
             } else {
@@ -2622,7 +2711,7 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
             break;
 
         case MB_TYPE_16x8:
-            if (sl->sub_mb_type[0]) {
+            if (sl->partition_cnt == 4) {
                 h->info->mb_type[mb_xy] = P_8x8;
                 h->info->mb_partition[mb_xy] = D_L0_8x4;
             } else {
@@ -2632,7 +2721,7 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
             break;
 
         case MB_TYPE_8x16:
-            if (sl->sub_mb_type[0]) {
+            if (sl->partition_cnt == 4) {
                 h->info->mb_type[mb_xy] = P_8x8;
                 h->info->mb_partition[mb_xy] = D_L0_4x8;
             } else {
@@ -2642,18 +2731,13 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
             break;
 
         case MB_TYPE_8x8:
-            if (sl->sub_mb_type[0]) {
+            if (sl->partition_cnt == 4) {
                 h->info->mb_type[mb_xy] = P_8x8;
                 h->info->mb_partition[mb_xy] = D_L0_4x4;
             } else {
                 h->info->mb_type[mb_xy] = P_L0;
                 h->info->mb_partition[mb_xy] = D_8x8;
             }
-            break;
-
-        case MB_TYPE_SKIP:
-            h->info->mb_type[mb_xy] = P_SKIP;
-            h->info->mb_partition[mb_xy] = D_16x16;
             break;
 
         case MB_TYPE_INTRA16x16:
@@ -2673,8 +2757,8 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
             case PLANE_PRED8x8:
                 pred_mode = I_PRED_16x16_P;
                 break;
-
             default:
+                pred_mode = sl->intra16x16_pred_mode;
                 break;
             }
 
@@ -2707,22 +2791,36 @@ static int save_frame_info (H264Context *h, H264SliceContext *sl)
             break;
         }
 
+        if (IS_SKIP(mb_type)) {
+            h->info->mb_type[mb_xy] = P_SKIP;
+            h->info->mb_partition[mb_xy] = D_16x16;
+        }
+
         h->info->chroma_intra_pred_mode[mb_xy] =
             h->chroma_pred_mode_table[mb_xy];
 
         if (IS_INTER(mb_type)) {
             int16_t *mv_cache = h->info->mv_cache + 2*h->mb2b_xy[mb_xy];
+            int8_t *ref_cache = h->info->ref_cache + h->mb2b_xy[mb_xy];
+
             for (int i = 0; i < 4; i++) {
-                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 0][0]), 4);
-                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 1][0]), 4);
-                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 2][0]), 4);
-                memcpy ((void*)mv_cache, (void*)(&sl->mv_cache[0][12 + i*8 + 3][0]), 4);
+                memcpy (mv_cache + 0, (void*)(&sl->mv_cache[0][12 + i*8 + 0][0]), 4);
+                memcpy (mv_cache + 2, (void*)(&sl->mv_cache[0][12 + i*8 + 1][0]), 4);
+                memcpy (mv_cache + 4, (void*)(&sl->mv_cache[0][12 + i*8 + 2][0]), 4);
+                memcpy (mv_cache + 6, (void*)(&sl->mv_cache[0][12 + i*8 + 3][0]), 4);
+
+                memcpy(ref_cache, &sl->ref_cache[0][12 + i*8], 4);
+
+                mv_cache += 2*h->b_stride;
+                ref_cache += h->b_stride;
             }
         }
 
         for(int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)
-                dct_coff_0[i * h->b_stride + j] = sl->mb[i*4*16 + j*4];
+                dct_coff_0[i * h->b_stride + j] = sl->mb[(i*4 + j)*16];
+
+        //print_mb_cache(h, sl);
 
         return 0;
     }
